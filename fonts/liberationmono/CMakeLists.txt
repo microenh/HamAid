@@ -1,0 +1,41 @@
+cmake_minimum_required(VERSION 3.12)
+
+# Library
+add_library(liberationmono
+    liberationmono6pt.c
+    liberationmono7pt.c
+    liberationmono8pt.c
+    liberationmono9pt.c
+    liberationmono10pt.c
+    liberationmono11pt.c
+    liberationmono12pt.c
+    liberationmono14pt.c
+    liberationmono16pt.c
+    liberationmono18pt.c
+    liberationmono20pt.c
+    liberationmono22pt.c
+    liberationmono24pt.c
+    liberationmono26pt.c
+    liberationmono28pt.c
+    liberationmono36pt.c
+    liberationmono48pt.c
+    liberationmono72pt.c
+    liberationmono6ptdata.c
+    liberationmono7ptdata.c
+    liberationmono8ptdata.c
+    liberationmono9ptdata.c
+    liberationmono10ptdata.c
+    liberationmono11ptdata.c
+    liberationmono12ptdata.c
+    liberationmono14ptdata.c
+    liberationmono16ptdata.c
+    liberationmono18ptdata.c
+    liberationmono20ptdata.c
+    liberationmono22ptdata.c
+    liberationmono24ptdata.c
+    liberationmono26ptdata.c
+    liberationmono28ptdata.c
+    liberationmono36ptdata.c
+    liberationmono48ptdata.c
+    liberationmono72ptdata.c
+)
