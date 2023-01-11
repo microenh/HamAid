@@ -78,8 +78,11 @@ void loop() {
 int main(void)
 {
     setup();
-    while(1){
-        loop();
-    }
+ 
+    sleep_ms(5 * 1000);
+
+    DisplayOff();
+    printf("Display Off\r\n");
+
     return 0;
 }

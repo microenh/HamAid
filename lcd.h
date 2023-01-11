@@ -64,6 +64,7 @@ void DrawSeconds(uint16_t x, uint16_t y, uint16_t seconds, const sFONT *font,
                  uint16_t foreground, uint16_t background, uint16_t prev_seconds);
 void Invert(bool invert);
 void ClearWindow(uint16_t color, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
+void DisplayOff(void);
 #define Clear(Color) ClearWindow(Color, 0, 0, lcd.width, lcd.height)
 #define BacklightLevel(Value) pwm_set_chan_level(slice_num, PWM_CHAN_B, Value)
 

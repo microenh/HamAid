@@ -392,3 +392,9 @@ void DrawSeconds(uint16_t x, uint16_t y, uint16_t seconds, const sFONT *font,
         DrawChar(x + 7 * dx / 2, y, font, foreground, background, sec01 + '0');
     }
 }
+
+void DisplayOff(void) {
+    Clear(BLACK);
+	BacklightLevel(0);
+    SendCommand(0x28);
+}
