@@ -1,5 +1,6 @@
 #include "config.h"
 #include "lcd.h"
+#include "liberationmono.h"
 
 const uint8_t DEBOUNCE = 1;   // 125 mSec ticks for btn debounce
 const uint8_t FLASH_CTR = 1;  // 125 mSec ticks for btn detect flash

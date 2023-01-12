@@ -23,8 +23,16 @@ project(HamAid C CXX ASM)
 # Initialise the Raspberry Pi Pico SDK
 pico_sdk_init()
 
+include_directories(lib/fonts)
+include_directories(lib/fonts/liberationmono)
+include_directories(lib/fatfs)
+include_directories(lib/config)
+
 # Subdirectory
-add_subdirectory(fonts/liberationmono)
+add_subdirectory(lib/fonts/liberationmono)
+add_subdirectory(lib/fatfs)
+add_subdirectory(lib/sdcard)
+add_subdirectory(lib/config)
 
 # Add executable. Default name is the project name, version 0.1
 add_executable(HamAid
@@ -40,9 +48,13 @@ pico_enable_stdio_uart(HamAid 1)
 pico_enable_stdio_usb(HamAid 0)
 
 # Add the standard library to the build
-target_link_libraries(HamAid
+target_link_libraries(
+        HamAid
         pico_stdlib
-        liberationmono)
+        liberationmono
+        fatfs
+        config
+        sdcard)
 
 # Add the standard include files to the build
 target_include_directories(HamAid PRIVATE
@@ -51,10 +63,11 @@ target_include_directories(HamAid PRIVATE
 )
 
 # Add any user requested libraries
-target_link_libraries(HamAid
-        hardware_pwm
-        hardware_spi
-        )
+target_link_libraries(
+  HamAid
+  hardware_pwm
+  hardware_spi
+)
 
 pico_add_extra_outputs(HamAid)
 

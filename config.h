@@ -1,6 +1,6 @@
 #pragma once
 
-#include "fonts/liberationmono/liberationmono.h"
+#include "fonts.h"
 #include <stdint.h>
 
 extern const uint8_t DEBOUNCE;

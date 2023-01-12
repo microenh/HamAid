@@ -278,6 +278,7 @@ static void gpio_pullup(uint8_t pin)
     gpio_pull_up(pin); 
 }
 
+#if 0
 void InitHardware(void)
 {
     stdio_init_all();
@@ -286,6 +287,7 @@ void InitHardware(void)
     spi_init(SPI_PORT, SPI_SPEED);
     gpio_set_function(LCD_CLK_PIN, GPIO_FUNC_SPI);
     gpio_set_function(LCD_MOSI_PIN, GPIO_FUNC_SPI);
+    gpio_set_function(LCD_MISO_PIN, GPIO_FUNC_SPI);
     
     // GPIO Config
     gpio_init(LCD_RST_PIN);
@@ -305,6 +307,17 @@ void InitHardware(void)
     pwm_set_enabled(slice_num, true);
     
     Debug("DEV_Module_Init OK \r\n");
+}
+#endif
+
+void InitPWM() {
+    // PWM Config
+    gpio_set_function(LCD_BL_PIN, GPIO_FUNC_PWM);
+    slice_num = pwm_gpio_to_slice_num(LCD_BL_PIN);
+    pwm_set_wrap(slice_num, 100);
+    pwm_set_chan_level(slice_num, PWM_CHAN_B, 1);
+    pwm_set_clkdiv(slice_num,50);
+    pwm_set_enabled(slice_num, true);
 }
 
 
