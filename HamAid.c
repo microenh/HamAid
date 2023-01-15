@@ -107,7 +107,27 @@ struct fcc_rec fcc;
 const char *fileName = "FCCSER.DAT";
 
 
-void lookup(const char *target) {
+const char *dataName = "FCC.db";
+const char *indexName = "FCC.ndx";
+
+struct index_hdr {
+  uint16_t keySize;
+  uint16_t nodeSize;
+  uint32_t root;
+};
+
+#define node_count 171
+
+struct index_rec {
+  char key[node_count * 2 - 1][10];
+  uint32_t record[node_count * 2 - 1];
+  uint16_t child[node_count * 2];
+  bool leaf;
+  uint16_t active;
+};
+
+
+void lookupFlat(const char *target) {
   // printf("records: %lu\r\n", records);
   FIL f;
   FRESULT res;
@@ -144,6 +164,68 @@ void lookup(const char *target) {
   } else {
     printf("%s %s %s\r\n", fcc.callsign, fcc.first_name, fcc.last_name);
   }
+}
+
+int binSearch(FIL *f, int nodeIdx, const char* targetCall) {
+  struct index_rec rec;
+  uint bytes_read;
+  FRESULT res;
+
+  res = f_lseek(f, sizeof(struct index_hdr) + sizeof(struct index_rec) * nodeIdx);
+  res = f_read(f, &rec, sizeof(struct index_rec), &bytes_read);
+
+  uint16_t high = rec.active;
+  uint16_t low = 0;
+  uint16_t mid = (high + low) / 2;
+  // printf("\r\n");
+  while (low < high) {
+    // printf("%d ", mid);
+    int c = strcmp(targetCall, rec.key[mid]);
+    if (!c) {
+      break;
+    } else if (c > 0) {
+      low = mid + 1;
+    } else {
+      high = mid;
+    }
+    mid = (high + low) / 2;
+  }
+  if (mid == rec.active) {
+    if (rec.leaf) {
+      return (-1);
+    } else {
+      return (binSearch (f, rec.child[rec.active], targetCall));
+    }
+  } else if (strcmp(targetCall, rec.key[mid])) {
+    if (rec.leaf) {
+      return (-1);
+    } else {
+      return (binSearch (f, rec.child[mid], targetCall));
+    } 
+  }
+  return rec.record[mid];
+}
+void lookup(const char *targetCall) {
+  struct index_hdr hdr;
+  struct fcc_rec fcc;
+  uint bytes_read;
+  FRESULT res;
+
+  FIL f;
+  res = f_open(&f, indexName, FA_READ);
+  res = f_read(&f, &hdr, sizeof(struct index_hdr), &bytes_read);
+  int r = binSearch(&f, hdr.root, targetCall);
+  f_close(&f);
+  if (r > -1) {
+    res = f_open(&f, dataName, FA_READ);
+    res = f_lseek(&f, r * sizeof(struct fcc_rec));
+    res = f_read(&f, &fcc, sizeof(fcc), &bytes_read);
+    printf("%s %s\r\n", fcc.callsign, fcc.entity_name);
+    res = f_close(&f);
+  } else {
+    printf("%s Not found.\r\n", targetCall);
+  }
+
 }
 
 const char *calls[] = {
