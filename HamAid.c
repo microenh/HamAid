@@ -170,40 +170,49 @@ int binSearch(FIL *f, int nodeIdx, const char* targetCall) {
   struct index_rec rec;
   uint bytes_read;
   FRESULT res;
+  bool searching = true;
+  int curIdx = nodeIdx;
+  int retval = -1;
+  while (searching) {
+    res = f_lseek(f, sizeof(struct index_hdr) + sizeof(struct index_rec) * curIdx);
+    res = f_read(f, &rec, sizeof(struct index_rec), &bytes_read);
 
-  res = f_lseek(f, sizeof(struct index_hdr) + sizeof(struct index_rec) * nodeIdx);
-  res = f_read(f, &rec, sizeof(struct index_rec), &bytes_read);
-
-  uint16_t high = rec.active;
-  uint16_t low = 0;
-  uint16_t mid = (high + low) / 2;
-  // printf("\r\n");
-  while (low < high) {
-    // printf("%d ", mid);
-    int c = strcmp(targetCall, rec.key[mid]);
-    if (!c) {
-      break;
-    } else if (c > 0) {
-      low = mid + 1;
-    } else {
-      high = mid;
+    uint16_t high = rec.active;
+    uint16_t low = 0;
+    uint16_t mid = (high + low) / 2;
+    // printf("\r\n");
+    while (low < high) {
+      // printf("%d ", mid);
+      int c = strcmp(targetCall, rec.key[mid]);
+      if (!c) {
+        break;
+      } else if (c > 0) {
+        low = mid + 1;
+      } else {
+        high = mid;
+      }
+      mid = (high + low) / 2;
     }
-    mid = (high + low) / 2;
-  }
-  if (mid == rec.active) {
-    if (rec.leaf) {
-      return (-1);
+    if (mid == rec.active) {
+      if (rec.leaf) {
+        searching = false;
+      } else {
+        curIdx = rec.child[rec.active];
+        // return (binSearch (f, rec.child[rec.active], targetCall));
+      }
+    } else if (strcmp(targetCall, rec.key[mid])) {
+      if (rec.leaf) {
+        searching = false;
+      } else {
+        curIdx = rec.child[mid];
+        // return (binSearch (f, rec.child[mid], targetCall));
+      } 
     } else {
-      return (binSearch (f, rec.child[rec.active], targetCall));
+      searching = false;
+      retval = rec.record[mid];
     }
-  } else if (strcmp(targetCall, rec.key[mid])) {
-    if (rec.leaf) {
-      return (-1);
-    } else {
-      return (binSearch (f, rec.child[mid], targetCall));
-    } 
   }
-  return rec.record[mid];
+  return retval;
 }
 void lookup(const char *targetCall) {
   struct index_hdr hdr;
