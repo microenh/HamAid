@@ -99,10 +99,10 @@ parameter:
 ******************************************************************************/
 static void SendData16Bit(uint16_t data)
 {
+    uint16_t data_f = (data >> 8) | (data << 8);
     gpio_put(LCD_DC_PIN, 1);
     gpio_put(LCD_CS_PIN, 0);
-    spi_write_blocking(SPI_PORT, (uint8_t *) &data + 1, 1);
-    spi_write_blocking(SPI_PORT, (uint8_t *) &data, 1);
+    spi_write_blocking(SPI_PORT, (uint8_t *) &data_f, 2);
     gpio_put(LCD_CS_PIN, 1);
 }
 
@@ -133,7 +133,6 @@ static void InitRegisters(void)
         0xd0, 0x04, 0x0c, 0x11, 0x13, 0x2c, 0x3f, 0x44, 0x51, 0x2f, 0x1f, 0x1f, 0x20, 0x23);
 
     SendCommand(0x11);                     // Sleep Out
-    SendCommand(0x29);                     // Display On
 }
 
 /********************************************************************************
@@ -212,15 +211,11 @@ parameter:
 ******************************************************************************/
 void ClearWindow(uint16_t Color, uint16_t Xstart, uint16_t Ystart, uint16_t width, uint16_t height)
 {
-    uint8_t low = Color;
-    uint8_t high = Color >> 8;
-   
     SetWindow(Xstart, Ystart, Xstart + width, Ystart + height);
     gpio_put(LCD_DC_PIN, 1);
     gpio_put(LCD_CS_PIN, 0);
     for (int j=0; j<width * height; j++) {
-        spi_write_blocking(SPI_PORT, &high, 1);
-        spi_write_blocking(SPI_PORT, &low, 1);
+        spi_write_blocking(SPI_PORT, (uint8_t *) &Color, 2);
     }
     gpio_put(LCD_CS_PIN, 1);
 }
@@ -233,10 +228,7 @@ void DrawChar(const uint16_t x, const uint16_t y, const sFONT *font, const uint1
         ClearWindow(background, x, y, font->width, font->height);
     } else {
         uint32_t offset = index * font->height * (font->width / 8 + (font->width % 8 ? 1 : 0));
-        uint8_t fg_low = foreground;
-        uint8_t fg_high = foreground >> 8;
-        uint8_t bg_low = background;
-        uint8_t bg_high = background >> 8;
+
         SetWindow(x, y, x + font->width, y + font->height);
         gpio_put(LCD_DC_PIN, 1);
         gpio_put(LCD_CS_PIN, 0);
@@ -246,19 +238,13 @@ void DrawChar(const uint16_t x, const uint16_t y, const sFONT *font, const uint1
         {
             for (uint16_t column = 0; column < font->width; column++)
             {
-                if (*ptr & (0x80 >> (column % 8))) {
-                    spi_write_blocking(SPI_PORT, &fg_high, 1);
-                    spi_write_blocking(SPI_PORT, &fg_low, 1);
-                } else {
-                    spi_write_blocking(SPI_PORT, &bg_high, 1);
-                    spi_write_blocking(SPI_PORT, &bg_low, 1);
-                }
+                spi_write_blocking(SPI_PORT, (uint8_t *) (*ptr & (0x80 >> (column % 8)) ? &foreground : &background), 2);
                 ptr += (column %8 == 7);
             } // Write a line
             ptr += (font->width % 8 != 0);
         } // Write all
+        gpio_put(LCD_CS_PIN, 1);
     }
-    gpio_put(LCD_CS_PIN, 1);
 }
 
 void Invert(bool invert) {
@@ -407,7 +393,11 @@ void DrawSeconds(uint16_t x, uint16_t y, uint16_t seconds, const sFONT *font,
 }
 
 void DisplayOff(void) {
-    Clear(BLACK);
 	BacklightLevel(0);
     SendCommand(0x28);
+}
+
+void DisplayOn(uint8_t bl) {
+    SendCommand(0x29);
+	BacklightLevel(bl);
 }

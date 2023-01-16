@@ -21,7 +21,13 @@
 #define SPI_SPEED 4000000
 
 // Note: colors are designed for the LCD to be inverted (Invert(true))
-#define RGB_565(r,g,b) (((((r)) & 0xf8) << 8) | (((( g)) & 0xfc) << 3) | ((( b)) >> 3))
+// #define RGB_565(r,g,b) (((((r)) & 0xf8) << 8) | ((((g)) & 0xfc) << 3) | (((b)) >> 3))
+
+// Byte swapped 
+// #define RGB_565(r,g,b) ((g & 0x1c) << 11) | ((b & 0xf8) << 5) | (r & 0xf8) | ((g & 0xe0) >> 5)
+
+// Byte swapped (Invert(false))
+#define RGB_565(r,g,b) (((g & 0x1c) << 11) | ((b & 0xf8) << 5) | (r & 0xf8) | ((g & 0xe0) >> 5)) ^ 0xffff
 
 #define BLACK    RGB_565(0,0,0)
 #define RED      RGB_565(127,0,0)    
@@ -67,6 +73,8 @@ void DrawSeconds(uint16_t x, uint16_t y, uint16_t seconds, const sFONT *font,
 void Invert(bool invert);
 void ClearWindow(uint16_t color, uint16_t x, uint16_t y, uint16_t width, uint16_t height);
 void DisplayOff(void);
+void DisplayOn(uint8_t bl);
+void SetWindow(uint16_t x, uint16_t y, uint16_t xEnd, uint16_t yEnd);
 #define Clear(Color) ClearWindow(Color, 0, 0, lcd.width, lcd.height)
 #define BacklightLevel(Value) pwm_set_chan_level(slice_num, PWM_CHAN_B, Value)
 

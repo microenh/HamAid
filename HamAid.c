@@ -2,6 +2,7 @@
 #include <string.h>
 #include "pico/stdlib.h"
 #include "hardware/spi.h"
+#include "button.h"
 
 #include "config.h"
 #include "DEV_Config.h"
@@ -10,27 +11,25 @@
 #include "liberationmono.h"
 #include "ff.h"
 
-// SPI Defines
-// We are going to use SPI 0, and allocate it to the following GPIO pins
-// Pins can be changed, see the GPIO function select table in the datasheet for information on GPIO assignments
+FATFS microSDFatFs;
+bool looping = true;
 
 void setup() {
     // static struct repeating_timer timer;
 
-    // set_sys_clock_48mhz();
+    set_sys_clock_48mhz();
     // add_repeating_timer_ms(125, heartbeat, NULL, &timer);
     System_Init();
+
+    // const char * DirName = "/";
+    // f_mount(&microSDFatFs, DirName, 1);
+
     InitPWM();
     
-    BacklightLevel(0);
     /* LCD Init */
     InitLCD(HORIZONTAL);
-    Invert(true);
-    Clear(BACKGROUND);
 
-
-    BacklightLevel(25);
-
+    #if 0
     uint y = 0;
 
     const short unsigned fgs[] = {TOP_FOREGROUND, BOTTOM_FOREGROUND};
@@ -71,11 +70,19 @@ void setup() {
         index = !index;
         y += fonts[i]->height + 1;
     }
-
+      DisplayOn(25);
+    #endif
+    DisplayOn(25);
+    Clear(YELLOW);
+    for(uint8_t y = 1; y < 14; y += 2) {
+      for (uint8_t x = 0; x < 20; x += 4) {
+        button(x, y, 4, 2, NULL, NULL, NULL, WHITE, BLACK, WHITE, false);
+      }
+    }
 }
 
 
-struct fcc_rec {
+typedef struct {
   char callsign[10];
   char radio_service_code[2];
   char grant_date[10];
@@ -98,91 +105,48 @@ struct fcc_rec {
   char po_box[20];
   char attention_line[35];
   char frn[10];
-};
-
-const unsigned rec_size = sizeof(struct fcc_rec);
-
-struct fcc_rec fcc;
-
-const char *fileName = "FCCSER.DAT";
-
+} fcc_rec;
 
 const char *dataName = "FCC.db";
 const char *indexName = "FCC.ndx";
+#define node_count 171
+#define key_size 10
 
-struct index_hdr {
+typedef struct {
   uint16_t keySize;
   uint16_t nodeSize;
   uint32_t root;
-};
+} index_hdr;
 
-#define node_count 171
-
-struct index_rec {
-  char key[node_count * 2 - 1][10];
+typedef struct {
+  char key[node_count * 2 - 1][key_size];
   uint32_t record[node_count * 2 - 1];
   uint16_t child[node_count * 2];
   bool leaf;
   uint16_t active;
-};
+} index_rec;
 
+int binSearch(const char* targetCall) {
+  index_hdr hdr;
+  index_rec rec;
 
-void lookupFlat(const char *target) {
-  // printf("records: %lu\r\n", records);
+  uint bytes_read;
+  FRESULT res;
   FIL f;
-  FRESULT res;
-  res = f_open(&f, fileName, FA_READ);
-  // printf("open: %d\r\n", res);
-  long records = f_size(&f) / rec_size;
-  int c;
-  long low = 0;
-  long high = records;
-  long mid;
-  uint bytes_read;
-  f_read(&f, &fcc, rec_size, &bytes_read);
-  // printf("bytes_read: %u\r\n", bytes_read);
-  c = strcmp(target, fcc.callsign);
-  if (c > 0) {
-    while (high - low > 1) {
-      mid = (low + high) / 2;
-      // printf("%s %s %ld %ld %ld\r\n", fcc.callsign, target, low, mid, high);
-      f_lseek(&f, mid * rec_size);
-      f_read(&f, &fcc, rec_size, &bytes_read);
-      c = strcmp(target, fcc.callsign);
-      if (!c) {
-        break;
-      } else if (c > 0) {
-        low = mid;
-      } else {
-        high = mid;
-      }
-    }
-  }
-  f_close(&f);
-  if (strcmp(fcc.callsign, target)) {
-    printf("%s - Not found.\r\n", target);
-  } else {
-    printf("%s %s %s\r\n", fcc.callsign, fcc.first_name, fcc.last_name);
-  }
-}
+  res = f_open(&f, indexName, FA_READ);
+  res = f_read(&f, &hdr, sizeof(index_hdr), &bytes_read);
 
-int binSearch(FIL *f, int nodeIdx, const char* targetCall) {
-  struct index_rec rec;
-  uint bytes_read;
-  FRESULT res;
   bool searching = true;
-  int curIdx = nodeIdx;
+  int curIdx = hdr.root;
   int retval = -1;
   while (searching) {
-    res = f_lseek(f, sizeof(struct index_hdr) + sizeof(struct index_rec) * curIdx);
-    res = f_read(f, &rec, sizeof(struct index_rec), &bytes_read);
+    res = f_lseek(&f, sizeof(index_hdr) + sizeof(index_rec) * curIdx);
+    res = f_read(&f, &rec, sizeof(index_rec), &bytes_read);
 
     uint16_t high = rec.active;
     uint16_t low = 0;
     uint16_t mid = (high + low) / 2;
-    // printf("\r\n");
     while (low < high) {
-      // printf("%d ", mid);
       int c = strcmp(targetCall, rec.key[mid]);
       if (!c) {
         break;
@@ -198,122 +162,63 @@ int binSearch(FIL *f, int nodeIdx, const char* targetCall) {
         searching = false;
       } else {
         curIdx = rec.child[rec.active];
-        // return (binSearch (f, rec.child[rec.active], targetCall));
       }
     } else if (strcmp(targetCall, rec.key[mid])) {
       if (rec.leaf) {
         searching = false;
       } else {
         curIdx = rec.child[mid];
-        // return (binSearch (f, rec.child[mid], targetCall));
       } 
     } else {
       searching = false;
       retval = rec.record[mid];
     }
   }
+  f_close(&f);
   return retval;
 }
-void lookup(const char *targetCall) {
-  struct index_hdr hdr;
-  struct fcc_rec fcc;
-  uint bytes_read;
-  FRESULT res;
 
-  FIL f;
-  res = f_open(&f, indexName, FA_READ);
-  res = f_read(&f, &hdr, sizeof(struct index_hdr), &bytes_read);
-  int r = binSearch(&f, hdr.root, targetCall);
-  f_close(&f);
+void lookup(const char *targetCall) {
+  int r = binSearch(targetCall);
   if (r > -1) {
-    res = f_open(&f, dataName, FA_READ);
-    res = f_lseek(&f, r * sizeof(struct fcc_rec));
-    res = f_read(&f, &fcc, sizeof(fcc), &bytes_read);
+    FIL f;
+    fcc_rec fcc;
+    uint bytes_read;
+    f_open(&f, dataName, FA_READ);
+    f_lseek(&f, r * sizeof(fcc_rec));
+    f_read(&f, &fcc, sizeof(fcc_rec), &bytes_read);
+    f_close(&f);
     printf("%s %s\r\n", fcc.callsign, fcc.entity_name);
-    res = f_close(&f);
   } else {
     printf("%s Not found.\r\n", targetCall);
   }
-
 }
 
-const char *calls[] = {
-  "_",
-  "AA0A",
-  "AA0AA",
-  "AA0AB",
-  "N8ME",
-  "N8ME-",
-  "W8NX",
-  "WA8KKN",
-  "W8CR",
-  "N8CWU",
-  "WZ9Y",
-  "WZ9Z",
-  "WZ9ZZZ",
-  "Z",
-};
-
-int mainFlat(void) {
-
-  for (int i = 0; i<sizeof(calls) / sizeof(calls[0]); i++) {
-    lookup(calls[i]);
+int testBTree(void) {
+  const char *test_calls[] = {
+    "AA0A", "AA0AA", "AA0AB", "N8ME", "W8NX", "WA8KKN", "W8CR", "N8CWU", "WZ9Y", "WZ9Z", "WZ9ZZZ", 
+    "-", "N8ME-", "Z"
+  };
+  
+  for (int i = 0; i<sizeof(test_calls) / sizeof(test_calls[0]); i++) {
+    lookup(test_calls[i]);
   }
   return 0;
 }
 
-
 void loop() {
-
+  // testBTree();
+  looping = false;
 }
-
-const char * DirName = "/";
 
 int main(void)
 {
-    // const uint MAX_BMP_FILES = 25;
-    DIR MyDirectory;
-    FILINFO MyFileInfo;
-    FATFS microSDFatFs;
-
     setup();
-    // sleep_ms(5 * 1000);
+    sleep_ms(15 * 1000);
+
+    while(looping) {
+      loop();
+    }
     DisplayOff();
-    printf("Display Off\r\n");
-
-
-#if 0
-    FRESULT res;
-    res = f_mount(&microSDFatFs, (TCHAR const*) "/", 1);
-    printf("res: %d\r\n", res);
-    if((res != FR_OK)){
-		if(res == FR_NO_FILESYSTEM){
-			/* Display message: SD card not FAT formated */
-			printf("SD_CARD_NOT_FORMATTED\r\n");  
-		}else{
-			/* Display message: Fail to open directory */
-			printf("SD_CARD_OPEN_FAIL\r\n");          
-		}
-    } else {
-        res = f_opendir(&MyDirectory, DirName);
-        // printf("res %d\r\n", res);
-        if(res == FR_OK){
-            for (;;){
-                res = f_readdir(&MyDirectory, &MyFileInfo);
-                if (res != FR_OK || MyFileInfo.fname[0] == 0) break;
-                // if(MyFileInfo.fname[0] == '.') continue;
-                if(!(MyFileInfo.fattrib & AM_DIR)){
-                    printf("%s\r\n", MyFileInfo.fname);
-                }
-            }
-        }
- 	}
-#endif
-
-    FRESULT res;
-    res = f_mount(&microSDFatFs, (TCHAR const*) "/", 1);
-    printf("mount: %d\r\n", res);
-    mainFlat();
-
     return 0;
 }

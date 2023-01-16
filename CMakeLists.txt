@@ -37,6 +37,7 @@ add_subdirectory(lib/config)
 # Add executable. Default name is the project name, version 0.1
 add_executable(HamAid
   HamAid.c
+  button.c
   config.c
   display.c
   lcd.c)
