@@ -6,8 +6,9 @@
 #include "pico/stdlib.h"
 #include "liberationmono.h"
 #include <stdint.h>
+#include <string.h>
 
-const sFONT *f[] = {&Liberation18, &Liberation9, &Liberation6};
+const sFONT *f[] = {&Liberation18, &Liberation9, &Liberation8};
 
 static void topLeftBottomRight(const uint16_t x, const uint16_t y, const uint16_t fg, const uint16_t bg) {
     SetWindow(x, y, x + 3, y + 3);
@@ -60,9 +61,15 @@ void button(const uint8_t gx, const uint8_t gy,
     ClearWindow(ol, x + 3, y + h - 1, w - 6, 1);        // bottom side
 
     // ClearWindow(bg, x + 1, y + 3, w - 2, h - 6);    // text area
-    const sFONT *font = f[1];
+    const sFONT *font = f[2];
     uint8_t top_text_margin = (h - 6 - font->height) / 2;
     uint8_t bottom_text_margin = h - 6 - font->height - top_text_margin;
+
+    if (top_text_margin > bottom_text_margin) {
+        uint8_t temp = top_text_margin;
+        top_text_margin = bottom_text_margin;
+        bottom_text_margin = temp;
+    }
 
     if (top_text_margin) {
         ClearWindow(bg, x + 1, y + 3, w - 2, top_text_margin);    // top text margin
@@ -72,18 +79,25 @@ void button(const uint8_t gx, const uint8_t gy,
         ClearWindow(bg, x + 1, y + h - 3 - bottom_text_margin, w - 2, bottom_text_margin);    // bottom text margin
     }
 
-    uint8_t left_text_margin = (w - 2 - 2 * font->width) / 2;
-    uint8_t right_text_margin = w - 2 - 2 * font->width - left_text_margin;
+    uint8_t text_width = strlen(l0) * font->width;
+
+    uint8_t left_text_margin = (w - 2 - text_width) / 2;
+    uint8_t right_text_margin = w - 2 - text_width - left_text_margin;
+    if (left_text_margin < right_text_margin) {
+        uint8_t hold = left_text_margin;
+        left_text_margin = right_text_margin;
+        right_text_margin = hold;
+    }
 
     if (left_text_margin) {
         ClearWindow(bg, x + 1, y + 3 + top_text_margin, left_text_margin, font->height);       // left text margin
     }
 
     if (right_text_margin) {
-        ClearWindow(bg, x + w - 2 - left_text_margin, y + 3 + top_text_margin,  left_text_margin, font->height);       // right text margin
+        ClearWindow(bg, x + 1 + text_width + left_text_margin, y + 3 + top_text_margin,  right_text_margin, font->height);       // right text margin
     }
 
-    DrawString(x + 1 + left_text_margin, y + 3 + top_text_margin, "AB", font, fg, bg);
+    DrawString(x + 1 + left_text_margin, y + 3 + top_text_margin, l0, font, fg, bg);
 
     ClearWindow(bg, x + w, y, 1, h + 1);            // right margin
     ClearWindow(bg, x, y + h, w, 1);                // bottom margin

@@ -73,10 +73,10 @@ void setup() {
       DisplayOn(25);
     #endif
     DisplayOn(25);
-    Clear(YELLOW);
-    for(uint8_t y = 1; y < 14; y += 2) {
+    Clear(BYELLOW);
+    for(uint8_t y = 3; y < 13; y += 3) {
       for (uint8_t x = 0; x < 20; x += 4) {
-        button(x, y, 4, 2, NULL, NULL, NULL, WHITE, BLACK, WHITE, false);
+        button(x, y, 4, 3, "ABCDEFGH", NULL, NULL, WHITE, BLACK, WHITE, false);
       }
     }
 }
