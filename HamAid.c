@@ -35,20 +35,20 @@ void setup() {
 
 
 void loop() {
-  testBTree();
-  fontDemo();
-  buttonDemo();
+  // testBTree();
+  // fontDemo();
+  // buttonDemo();
+  alphaKeyboard();
   looping = false;
 }
 
 int main(void)
 {
     setup();
-    sleep_ms(15 * 1000);
 
     while(looping) {
       loop();
     }
-    DisplayOff();
+    // DisplayOff();
     return 0;
 }
