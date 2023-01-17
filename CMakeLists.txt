@@ -61,10 +61,10 @@ target_link_libraries(
         sdcard)
 
 # Add the standard include files to the build
-target_include_directories(HamAid PRIVATE
-  ${CMAKE_CURRENT_LIST_DIR}
-  ${CMAKE_CURRENT_LIST_DIR}/.. # for our common lwipopts or any other standard includes, if required
-)
+# target_include_directories(HamAid PRIVATE
+#   ${CMAKE_CURRENT_LIST_DIR}
+#   ${CMAKE_CURRENT_LIST_DIR}/.. # for our common lwipopts or any other standard includes, if required
+# )
 
 # Add any user requested libraries
 target_link_libraries(
