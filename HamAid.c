@@ -73,10 +73,14 @@ void setup() {
       DisplayOn(25);
     #endif
     DisplayOn(25);
-    Clear(BYELLOW);
-    for(uint8_t y = 3; y < 13; y += 3) {
+    Clear(BLACK);
+    for(uint8_t y = 1; y < 14; y += 2) {
       for (uint8_t x = 0; x < 20; x += 4) {
-        button(x, y, 4, 3, "ABCDEFGH", NULL, NULL, WHITE, BLACK, WHITE, false);
+        if (x == 4) {
+          button(x, y, 4, 2, "ABCDEF", "IJKLMN", WHITE, BLACK, BRED, true);
+        } else {
+          button(x, y, 4, 2, "ABC", NULL, WHITE, BLACK, BRED, false);
+        }
       }
     }
 }
