@@ -304,6 +304,7 @@ void InitPWM() {
     pwm_set_chan_level(slice_num, PWM_CHAN_B, 1);
     pwm_set_clkdiv(slice_num,50);
     pwm_set_enabled(slice_num, true);
+    pwm_set_chan_level(slice_num, PWM_CHAN_B, 0);
 }
 
 

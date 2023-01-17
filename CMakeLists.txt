@@ -37,9 +37,12 @@ add_subdirectory(lib/config)
 # Add executable. Default name is the project name, version 0.1
 add_executable(HamAid
   HamAid.c
+  btreeTest.c
   button.c
+  buttonDemo.c
   config.c
   display.c
+  fontDemo.c
   lcd.c)
 
 pico_set_program_name(HamAid "HamAid")
