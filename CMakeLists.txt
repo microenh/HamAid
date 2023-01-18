@@ -43,7 +43,8 @@ add_executable(HamAid
   config.c
   display.c
   fontDemo.c
-  lcd.c)
+  lcd.c
+  lcd_touch.c)
 
 pico_set_program_name(HamAid "HamAid")
 pico_set_program_version(HamAid "0.1")

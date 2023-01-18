@@ -75,6 +75,8 @@ void ClearWindow(uint16_t color, uint16_t x, uint16_t y, uint16_t width, uint16_
 void DisplayOff(void);
 void DisplayOn(uint8_t bl);
 void SetWindow(uint16_t x, uint16_t y, uint16_t xEnd, uint16_t yEnd);
+
+void DrawCross(uint16_t color, uint16_t x, uint16_t y, uint16_t size);
 #define Clear(Color) ClearWindow(Color, 0, 0, lcd.width, lcd.height)
 #define BacklightLevel(Value) pwm_set_chan_level(slice_num, PWM_CHAN_B, Value)
 

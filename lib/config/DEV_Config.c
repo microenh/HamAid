@@ -64,18 +64,18 @@ void DEV_GPIO_Mode(UWORD Pin, UWORD Mode)
 void DEV_GPIO_Init(void)
 {
 	DEV_GPIO_Mode(LCD_RST_PIN,GPIO_OUT);
-    DEV_GPIO_Mode(LCD_DC_PIN, GPIO_OUT);
-    DEV_GPIO_Mode(LCD_BKL_PIN, GPIO_OUT);
-    DEV_GPIO_Mode(LCD_CS_PIN, GPIO_OUT);
-    DEV_GPIO_Mode(TP_CS_PIN,GPIO_OUT);
-    DEV_GPIO_Mode(TP_IRQ_PIN,GPIO_IN);
-    DEV_GPIO_Mode(SD_CS_PIN,GPIO_OUT);
+  DEV_GPIO_Mode(LCD_DC_PIN, GPIO_OUT);
+  DEV_GPIO_Mode(LCD_BKL_PIN, GPIO_OUT);
+  DEV_GPIO_Mode(LCD_CS_PIN, GPIO_OUT);
+  DEV_GPIO_Mode(TP_CS_PIN,GPIO_OUT);
+  DEV_GPIO_Mode(TP_IRQ_PIN,GPIO_IN);
+  DEV_GPIO_Mode(SD_CS_PIN,GPIO_OUT);
 	gpio_set_pulls(TP_IRQ_PIN,true,false);
 
-    DEV_Digital_Write(TP_CS_PIN, 1);
-    DEV_Digital_Write(LCD_CS_PIN, 1);
-    DEV_Digital_Write(LCD_BKL_PIN, 1);
-    DEV_Digital_Write(SD_CS_PIN, 1);
+  DEV_Digital_Write(TP_CS_PIN, 1);
+  DEV_Digital_Write(LCD_CS_PIN, 1);
+  DEV_Digital_Write(LCD_BKL_PIN, 1);
+  DEV_Digital_Write(SD_CS_PIN, 1);
 }
 
 
@@ -93,7 +93,7 @@ uint8_t System_Init(void)
 	gpio_set_function(SPI_MOSI_PIN,GPIO_FUNC_SPI);
 	gpio_set_function(LCD_MISO_PIN,GPIO_FUNC_SPI);
 
-    return 0;
+  return 0;
 }
 
 void System_Exit(void)
@@ -111,7 +111,7 @@ uint8_t SPI4W_Write_Byte(uint8_t value)
 {   
 	uint8_t rxDat;
 	spi_write_read_blocking(spi1, &value, &rxDat, 1);
-    return rxDat;
+  return rxDat;
 }
 
 #if 0

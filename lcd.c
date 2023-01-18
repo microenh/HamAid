@@ -393,6 +393,11 @@ void DrawSeconds(uint16_t x, uint16_t y, uint16_t seconds, const sFONT *font,
     }
 }
 
+void DrawCross(uint16_t color, uint16_t x, uint16_t y, uint16_t size) {
+  ClearWindow(color, x - size, y, 2 * size, 1);
+  ClearWindow(color, x, y - size, 1, 2 * size);
+}
+
 void DisplayOff(void) {
 	BacklightLevel(0);
     SendCommand(0x28);
