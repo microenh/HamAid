@@ -211,13 +211,13 @@ parameter:
 ******************************************************************************/
 void ClearWindow(uint16_t Color, uint16_t Xstart, uint16_t Ystart, uint16_t width, uint16_t height)
 {
-    SetWindow(Xstart, Ystart, Xstart + width, Ystart + height);
-    gpio_put(LCD_DC_PIN, 1);
-    gpio_put(LCD_CS_PIN, 0);
-    for (int j=0; j<width * height; j++) {
-        spi_write_blocking(SPI_PORT, (uint8_t *) &Color, 2);
-    }
-    gpio_put(LCD_CS_PIN, 1);
+  SetWindow(Xstart, Ystart, Xstart + width, Ystart + height);
+  gpio_put(LCD_DC_PIN, 1);
+  gpio_put(LCD_CS_PIN, 0);
+  for (int j=0; j<width * height; j++) {
+    spi_write_blocking(SPI_PORT, (uint8_t *) &Color, 2);
+  }
+  gpio_put(LCD_CS_PIN, 1);
 }
 
 void DrawChar(const uint16_t x, const uint16_t y, const sFONT *font, const uint16_t foreground, const uint16_t background, const u_char character)
@@ -248,7 +248,7 @@ void DrawChar(const uint16_t x, const uint16_t y, const sFONT *font, const uint1
 }
 
 void Invert(bool invert) {
-    SendCommand(invert ? 0x21 : 0x20);
+  SendCommand(invert ? 0x21 : 0x20);
 }
 
 
@@ -400,10 +400,10 @@ void DrawCross(uint16_t color, uint16_t x, uint16_t y, uint16_t size) {
 
 void DisplayOff(void) {
 	BacklightLevel(0);
-    SendCommand(0x28);
+  SendCommand(0x28);
 }
 
 void DisplayOn(uint8_t bl) {
-    SendCommand(0x29);
+  SendCommand(0x29);
 	BacklightLevel(bl);
 }

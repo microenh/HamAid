@@ -50,15 +50,8 @@ UBYTE DEV_Digital_Read(UWORD Pin)
 **/
 void DEV_GPIO_Mode(UWORD Pin, UWORD Mode)
 {
-    gpio_init(Pin);
+  gpio_init(Pin);
 	gpio_set_dir(Pin, (Mode == 0 || Mode == GPIO_IN) ? GPIO_IN : GPIO_OUT);
-	#if 0
-    if (Mode == 0 || Mode == GPIO_IN) {
-        gpio_set_dir(Pin, GPIO_IN);
-    } else {
-        gpio_set_dir(Pin, GPIO_OUT);
-    }
-	#endif
 }
 
 void DEV_GPIO_Init(void)
@@ -72,10 +65,10 @@ void DEV_GPIO_Init(void)
   DEV_GPIO_Mode(SD_CS_PIN,GPIO_OUT);
 	gpio_set_pulls(TP_IRQ_PIN,true,false);
 
-  DEV_Digital_Write(TP_CS_PIN, 1);
-  DEV_Digital_Write(LCD_CS_PIN, 1);
-  DEV_Digital_Write(LCD_BKL_PIN, 1);
-  DEV_Digital_Write(SD_CS_PIN, 1);
+  gpio_put(TP_CS_PIN, 1);
+  gpio_put(LCD_CS_PIN, 1);
+  gpio_put(LCD_BKL_PIN, 1);
+  gpio_put(SD_CS_PIN, 1);
 }
 
 
@@ -101,6 +94,7 @@ void System_Exit(void)
 
 }
 
+#if 0
 /*********************************************
 function:	Hardware interface
 note:
@@ -113,6 +107,7 @@ uint8_t SPI4W_Write_Byte(uint8_t value)
 	spi_write_read_blocking(spi1, &value, &rxDat, 1);
   return rxDat;
 }
+#endif
 
 #if 0
 uint8_t SPI4W_Read_Byte(uint8_t value)                                    

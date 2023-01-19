@@ -42,17 +42,17 @@ extern spi_inst_t *SPI_PORT;
 
 /*------------------------------------------------------------------------------------------------------*/
 
-#define DEV_Digital_Write(pin, value) gpio_put(pin, value)
-#define DEV_Digital_Read(pin) gpio_get(pin)
+// #define DEV_Digital_Write(pin, value) gpio_put(pin, value)
+// #define DEV_Digital_Read(pin) gpio_get(pin)
 
 void DEV_GPIO_Mode(UWORD Pin, UWORD Mode);
 void DEV_GPIO_Init(void);
 
 uint8_t System_Init(void);
 void System_Exit(void);
-uint8_t SPI4W_Write_Byte(uint8_t value);
+// uint8_t SPI4W_Write_Byte(uint8_t value);
 
-#define SPI4W_Read_Byte(value) SPI4W_Write_Byte(value)
-#define Driver_Delay_ms(xms) sleep_ms(xms)
-#define Driver_Delay_us(xus) sleep_us(xus)
+// #define SPI4W_Read_Byte(value) SPI4W_Write_Byte(value)
+// #define Driver_Delay_ms(xms) sleep_ms(xms)
+// #define Driver_Delay_us(xus) sleep_us(xus)
 

@@ -26,25 +26,17 @@ parameter:
 	Channel_Cmd :	0x90: Read channel Y +, select the ADC resolution is 12 bits, set to differential mode
 					0xd0: Read channel x +, select the ADC resolution is 12 bits, set to differential mode
 *******************************************************************************/
-static uint16_t TP_Read_ADC(uint8_t CMD)
+static uint16_t TP_Read_ADC(uint8_t cmd)
 {
-    uint16_t Data = 0;
+    // A cycle of at least 400ns.
+    uint8_t data, data1;
 
-    //A cycle of at least 400ns.
-    DEV_Digital_Write(TP_CS_PIN,0);
-
-    SPI4W_Write_Byte(CMD);
-    Driver_Delay_us(200);
-
-    //	dont write 0xff, it will block xpt2046  
-    //Data = SPI4W_Read_Byte(0Xff);
-    Data = SPI4W_Read_Byte(0X00);
-    Data <<= 8;//7bit
-    Data |= SPI4W_Read_Byte(0X00);
-    //Data = SPI4W_Read_Byte(0Xff);
-    Data >>= 3;//5bit
-    DEV_Digital_Write(TP_CS_PIN,1);
-    return Data;
+    gpio_put(TP_CS_PIN, 0);
+    spi_write_blocking(SPI_PORT, &cmd, 1);
+    // sleep_us(200);
+    spi_read_blocking(SPI_PORT, 0, (uint8_t *) &data, 2);
+    gpio_put(TP_CS_PIN, 1);
+    return ((data << 5) | (data >> (16 - 5)));
 }
 
 /*******************************************************************************
@@ -66,7 +58,7 @@ static uint16_t TP_Read_ADC_Average(uint8_t Channel_Cmd)
   //Read and save multiple samples
   for(i = 0; i < READ_TIMES; i++){
 		Read_Buff[i] = TP_Read_ADC(Channel_Cmd);
-		Driver_Delay_us(200);
+		//sleep_us(200);
 	}
   //LCD SPI speed = 18 MHz
   spi_set_baudrate(SPI_PORT,18000000);
@@ -98,7 +90,7 @@ parameter:
 	Channel_Cmd :	0x90 :Read channel Y +
 					0xd0 :Read channel x +
 *******************************************************************************/
-static void TP_Read_ADC_XY(uint16_t *pXCh_Adc, uint16_t  *pYCh_Adc )
+void TP_Read_ADC_XY(uint16_t *pXCh_Adc, uint16_t  *pYCh_Adc )
 {
     *pXCh_Adc = TP_Read_ADC_Average(0xD0);
     *pYCh_Adc = TP_Read_ADC_Average(0x90);
@@ -119,104 +111,82 @@ static bool TP_Read_TwiceADC(uint16_t *pXCh_Adc, uint16_t  *pYCh_Adc )
 
   //Read the ADC values Read the ADC values twice
   TP_Read_ADC_XY(&XCh_Adc1, &YCh_Adc1);
-	Driver_Delay_us(10);
+	//sleep_us(10);
   TP_Read_ADC_XY(&XCh_Adc2, &YCh_Adc2);
-	Driver_Delay_us(10);
+	//sleep_us(10);
 	
   //The ADC error used twice is greater than ERR_RANGE to take the average
-  if( ((XCh_Adc2 <= XCh_Adc1 && XCh_Adc1 < XCh_Adc2 + ERR_RANGE) ||
-        (XCh_Adc1 <= XCh_Adc2 && XCh_Adc2 < XCh_Adc1 + ERR_RANGE))
-        && ((YCh_Adc2 <= YCh_Adc1 && YCh_Adc1 < YCh_Adc2 + ERR_RANGE) ||
-        (YCh_Adc1 <= YCh_Adc2 && YCh_Adc2 < YCh_Adc1 + ERR_RANGE))) {
-      *pXCh_Adc = (XCh_Adc1 + XCh_Adc2) / 2;
-      *pYCh_Adc = (YCh_Adc1 + YCh_Adc2) / 2;
-      return true;
+  // if( ((XCh_Adc2 <= XCh_Adc1 && XCh_Adc1 < XCh_Adc2 + ERR_RANGE) ||
+  //       (XCh_Adc1 <= XCh_Adc2 && XCh_Adc2 < XCh_Adc1 + ERR_RANGE))
+  //       && ((YCh_Adc2 <= YCh_Adc1 && YCh_Adc1 < YCh_Adc2 + ERR_RANGE) ||
+  //       (YCh_Adc1 <= YCh_Adc2 && YCh_Adc2 < YCh_Adc1 + ERR_RANGE))) {
+
+  if ((abs(XCh_Adc2 - XCh_Adc1) < ERR_RANGE) && (abs(YCh_Adc2 - YCh_Adc1) < ERR_RANGE)) {
+    *pXCh_Adc = (XCh_Adc1 + XCh_Adc2) / 2;
+    *pYCh_Adc = (YCh_Adc1 + YCh_Adc2) / 2;
+    return true;
   }
 
   //The ADC error used twice is less than ERR_RANGE returns failed
   return false;
 }
 
-/*******************************************************************************
-function:
-		Calculation
-parameter:
-		chCoordType:
-					1 : calibration
-					0 : relative position
-*******************************************************************************/
-static uint8_t TP_Scan(uint8_t chCoordType) {
+TP_XY slope;
+TP_XY offset;
+
+bool TP_Scan(TP_XY *calibrated) {
   // In X, Y coordinate measurement, IRQ is disabled and output is low
-  if (!DEV_Digital_Read(TP_IRQ_PIN)) { //Press the button to press
-    // Read the physical coordinates
-    if (chCoordType) {
-      TP_Read_TwiceADC(&sTP_DEV.Xpoint, &sTP_DEV.Ypoint);
-      // Read the screen coordinates
-    } else if (TP_Read_TwiceADC(&sTP_DEV.Xpoint, &sTP_DEV.Ypoint)) {
-      sTP_Draw.Xpoint = lcd.width -
-                  sTP_DEV.fXfac * sTP_DEV.Xpoint -
-                  sTP_DEV.iXoff;
-      sTP_Draw.Ypoint = lcd.height -
-                  sTP_DEV.fYfac * sTP_DEV.Ypoint -
-                  sTP_DEV.iYoff;
-      if (0 == (sTP_DEV.chStatus & TP_PRESS_DOWN)) {	//Not being pressed
-          sTP_DEV.chStatus = TP_PRESS_DOWN | TP_PRESSED;
-          sTP_DEV.Xpoint0 = sTP_DEV.Xpoint;
-          sTP_DEV.Ypoint0 = sTP_DEV.Ypoint;
-      }
-    } else {
-      if (sTP_DEV.chStatus & TP_PRESS_DOWN) {	//0x80
-          sTP_DEV.chStatus &= ~(1 << 7);		//0x00
-      } else {
-          sTP_DEV.Xpoint0 = 0;
-          sTP_DEV.Ypoint0 = 0;
-          sTP_DEV.Xpoint = 0xffff;
-          sTP_DEV.Ypoint = 0xffff;
-      }
-    }
+  uint16_t x;
+  uint16_t y;
+  if (!gpio_get(TP_IRQ_PIN)  &&  TP_Read_TwiceADC(&y, &x)) { 
+    calibrated->x = ((long)(x - offset.x) * 10l) / (long) slope.x;
+    calibrated->y = ((long)(y - offset.y) * 10l) / (long) slope.y;
+    return true;
+  } else {
+    return false;
   }
-  return (sTP_DEV.chStatus & TP_PRESS_DOWN);
+}
+
+bool raw_touch(TP_XY *touch) {
+  return (gpio_get(TP_IRQ_PIN)) ? false : TP_Read_TwiceADC(&(touch->y), &(touch->x));
+}
+
+void calibrate(TP_XY raw[4]) {
+  // calculate calibration
+
+  // we average two readings and divide them by half and store them as scaled integers 10 times their actual, fractional value
+  // the x points are located at 20 and 300 on x axis, hence, the delta x is 280, we take 28 instead, to preserve fractional value,
+  // there are two readings (x1,x2) and (x3, x4). Hence, we have to divide by 28 * 2 = 56 
+  slope.x = ((raw[3].x  -  raw[2].x) + (raw[1].x - raw[0].x)) / 56;
+
+  // the y points are located at 20 and 220 on the y axis, hence, the delta is 200. we take it as 20 instead, to preserve the fraction value 
+  // there are two readings (y1, y2) and (y3, y4). Hence we have to divide by 20 * 2 = 40
+  slope.y = ((raw[3].y - raw[0].y) + (raw[3].y - raw[1].y)) / 40;
+
+  // x0, y0 is at 20,20 pixels
+  offset.x = raw[0].x - ((20 * slope.x) / 10);
+  offset.y = raw[0].y - ((20 * slope.y) / 10);
+
+  for (uint8_t i=0; i < 4; i++) {
+    printf("raw[%d] (%d,%d)\r\n", i, raw[i].x, raw[i].y);
+  }
+  // printf("\r\n");
+  // printf("offset.x %d, slope.x %d\r\n", offset.x, slope.x);
+  // printf("offset.y %d, slope.y %d\r\n", offset.y, slope.y);
+
 }
 
 /*******************************************************************************
 function:
 		Use the default calibration factor
 *******************************************************************************/
-void TP_GetAdFac(void)
+static void TP_GetAdFac(void)
 {
-  // sTP_DEV.fXfac = 0.066626;
-  // sTP_DEV.fYfac = 0.089779;
-  // sTP_DEV.iXoff = -20;
-  // sTP_DEV.iYoff = -34;
-
-  sTP_DEV.fXfac = 0.066749;                                                                                                                                                        
-  sTP_DEV.fYfac = 0.090881;                                                                                                                                                        
-  sTP_DEV.iXoff = -13;                                                                                                                                                             
-  sTP_DEV.iYoff = -33;
+  slope.x = 110;                                                                                                                                                        
+  slope.y = -150;                                                                                                                                                        
+  offset.x = 356;                                                                                                                                                             
+  offset.y = 3718;
 }
-
-/*******************************************************************************
-function:
-		Draw Board
-*******************************************************************************/
-void TP_DrawBoard(void)
-{
-  TP_Scan(0);
-  if (sTP_DEV.chStatus & TP_PRESS_DOWN) {
-    //Horizontal screen
-    if (sTP_Draw.Xpoint < lcd.width &&
-        //Determine whether the law is legal
-        sTP_Draw.Ypoint < lcd.height) {
-      if(lcd.width > lcd.height) {
-        printf("horizontal x:%d,y:%d\n",sTP_Draw.Xpoint,sTP_Draw.Ypoint);
-      } else {
-        printf("Vertical x:%d,y:%d\n",sTP_Draw.Xpoint,sTP_Draw.Ypoint);
-      }
-    }
-    sTP_DEV.chStatus = 0;
-  }
-}
-
 
 /*******************************************************************************
 function:
@@ -224,8 +194,12 @@ function:
 *******************************************************************************/
 void TP_Init(void)
 {
-  DEV_Digital_Write(TP_CS_PIN,1);
-  TP_Read_ADC_XY(&sTP_DEV.Xpoint, &sTP_DEV.Ypoint);
+  uint8_t cmd = 0;
+  gpio_put(TP_CS_PIN, 0);
+  spi_write_blocking(SPI_PORT, &cmd, 1);
+  gpio_put(TP_CS_PIN, 1);
+
+  TP_GetAdFac();
 }
 
 

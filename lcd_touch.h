@@ -20,8 +20,8 @@
 #include "pico/float.h"
 
 
-#define TP_PRESS_DOWN           0x80
-#define TP_PRESSED              0x40
+#define TP_PRESS_DOWN 0x80
+#define TP_PRESSED    0x40
 
 //Touch screen structure
 typedef struct {
@@ -46,9 +46,13 @@ typedef struct{
 	uint16_t Color;
 } TP_DRAW;
 
+typedef struct {
+  int16_t x;
+  int16_t y;
+} TP_XY;
 
-void TP_GetAdFac(void);
-// void TP_Adjust(void);
-//void TP_Dialog(void);
-void TP_DrawBoard(void);
+
+bool TP_Scan(TP_XY *calibrated);
+bool raw_touch(TP_XY *touch);
+void calibrate(TP_XY raw[4]);
 void TP_Init(void);
