@@ -52,7 +52,14 @@ typedef struct {
 } TP_XY;
 
 
-bool TP_Scan(TP_XY *calibrated);
+
 bool raw_touch(TP_XY *touch);
 void calibrate(TP_XY raw[4]);
 void TP_Init(void);
+
+void TP_Update(void);
+
+extern int16_t highlight_grid;
+extern int16_t clear_grid;
+extern int16_t press_grid;
+extern int16_t hold_grid;

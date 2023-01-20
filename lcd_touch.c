@@ -16,7 +16,12 @@
 #include <stdlib.h>
 
 
-extern uint8_t id;
+int16_t highlight_grid = -1;
+int16_t clear_grid = -1;
+int16_t press_grid = -1;
+int16_t hold_grid = -1;
+
+// extern uint8_t id;
 static TP_DEV sTP_DEV;
 static TP_DRAW sTP_Draw;
 /*******************************************************************************
@@ -134,16 +139,21 @@ static bool TP_Read_TwiceADC(uint16_t *pXCh_Adc, uint16_t  *pYCh_Adc )
 TP_XY slope;
 TP_XY offset;
 
-bool TP_Scan(TP_XY *calibrated) {
+// returns -1 (no touch)
+//    0 .. 299 16x16 pixel grid location
+//    0: top left
+//   19: top right
+//  280: bottom left
+//  299: bottom right 
+static int16_t TP_Scan(void) {
   // In X, Y coordinate measurement, IRQ is disabled and output is low
   uint16_t x;
   uint16_t y;
   if (!gpio_get(TP_IRQ_PIN)  &&  TP_Read_TwiceADC(&y, &x)) { 
-    calibrated->x = ((long)(x - offset.x) * 10l) / (long) slope.x;
-    calibrated->y = ((long)(y - offset.y) * 10l) / (long) slope.y;
-    return true;
+    return ((((long)(x - offset.x) * 10l) / (long) slope.x) >> 4)
+       + ((((long)(y - offset.y) * 10l) / (long) slope.y) >> 4) * 20;
   } else {
-    return false;
+    return -1;
   }
 }
 
@@ -167,12 +177,12 @@ void calibrate(TP_XY raw[4]) {
   offset.x = raw[0].x - ((20 * slope.x) / 10);
   offset.y = raw[0].y - ((20 * slope.y) / 10);
 
-  for (uint8_t i=0; i < 4; i++) {
-    printf("raw[%d] (%d,%d)\r\n", i, raw[i].x, raw[i].y);
-  }
-  // printf("\r\n");
-  // printf("offset.x %d, slope.x %d\r\n", offset.x, slope.x);
-  // printf("offset.y %d, slope.y %d\r\n", offset.y, slope.y);
+  // for (uint8_t i=0; i < 4; i++) {
+  //   printf("raw[%d] (%d,%d)\r\n", i, raw[i].x, raw[i].y);
+  // }
+  printf("\r\n");
+  printf("offset.x %d, slope.x %d\r\n", offset.x, slope.x);
+  printf("offset.y %d, slope.y %d\r\n", offset.y, slope.y);
 
 }
 
@@ -182,10 +192,10 @@ function:
 *******************************************************************************/
 static void TP_GetAdFac(void)
 {
-  slope.x = 110;                                                                                                                                                        
-  slope.y = -150;                                                                                                                                                        
-  offset.x = 356;                                                                                                                                                             
-  offset.y = 3718;
+  offset.x = 322;                                                                                                                                                             
+  slope.x = 111;                                                                                                                                                        
+  slope.y = -151;                                                                                                                                                        
+  offset.y = 3768;
 }
 
 /*******************************************************************************
@@ -202,4 +212,22 @@ void TP_Init(void)
   TP_GetAdFac();
 }
 
+uint16_t current_grid = -1;
 
+void TP_Update(void) {
+  int16_t down_grid = TP_Scan();
+  if (down_grid > -1) {
+    if (down_grid != current_grid) {
+      if (current_grid > -1) {
+        clear_grid = current_grid;
+      }
+      highlight_grid = down_grid;
+      current_grid = down_grid;
+    }
+  } else {
+    if (current_grid > -1) {
+      clear_grid = current_grid;
+      current_grid = 0;
+    }
+  }
+}

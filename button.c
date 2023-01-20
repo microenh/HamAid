@@ -131,31 +131,51 @@ static void textArea2(const uint16_t x, const uint16_t y,
   text_line(x, y + top_text_margin + Small->height, w, Small, l1, fg, bg);
 }
 
-void button(const uint8_t gx, const uint8_t gy,
-    const uint8_t gw, const uint8_t gh,
-    const char *l0, const char *l1,
-    const uint16_t fg, const uint16_t bg,
-    const uint16_t screen_bg, const uint16_t outline,
-    bool reverse, bool smallfont) {
+void button(const BUTTON_LAYOUT layout, bool inverse, bool update) {
+// void button(const uint8_t gx, const uint8_t gy,
+//     const uint8_t gw, const uint8_t gh,
+//     const char *l0, const char *l1,
+//     const uint16_t fg, const uint16_t bg, const uint16_t outline,
+//     bool reverse, bool smallfont, bool update) {
 
-    uint16_t x = gx << 4;
-    uint16_t y = gy << 4;
-    uint16_t w = (gw << 4) - 1;
-    uint16_t h = (gh << 4) - 1; 
+    uint16_t x = layout.x << 4;
+    uint16_t y = layout.y << 4;
+    uint16_t w = (layout.w << 4) - 1;
+    uint16_t h = (layout.h << 4) - 1; 
 
-    uint16_t button_fg = fg;
-    uint16_t button_bg = bg;
-    if (reverse) {
-        button_fg = bg;
-        button_bg = fg;
+    uint16_t button_fg = layout.fg;
+    uint16_t button_bg = layout.bg;
+    if (inverse) {
+        button_fg = layout.bg;
+        button_bg = layout.fg;
     }
 
-    frame(x, y, w, h, button_bg, screen_bg, outline);
-
-    if (l1) {
-      textArea2(x + 1, y + 3, w - 2, h - 6, fg, bg, l0, l1);
+    if (update) {
+        text_wings(x,y,w,h, button_bg);
     } else {
-      textArea(x + 1, y + 3, w - 2, h - 6, fg, bg, l0, smallfont);
+      frame(x, y, w, h, button_bg, BACKGROUND, layout.outline);
     }
-  
+
+    if (layout.l1) {
+      textArea2(x + 1, y + 3, w - 2, h - 6, button_fg, button_bg, layout.l0, layout.l1);
+    } else {
+      if (layout.l0) {
+        textArea(x + 1, y + 3, w - 2, h - 6, button_fg, button_bg, layout.l0, layout.smallfont);
+      } else {
+        ClearWindow(button_bg, x+1, y+3, w-2, h-6);
+      }
+    }  
+}
+
+int16_t buttonIndex(int16_t grid, BUTTON_LAYOUT *layout, int16_t button_count) {
+  int16_t result = -1;
+  int16_t x = grid % 20;
+  int16_t y = grid / 20;
+  for(int16_t i=0; i<button_count; i++) {
+    if (x >= layout[i].x && x < layout[i].x + layout[i].w && y >= layout[i].y && y < layout[i].y + layout[i].h) {
+      result = i;
+      break;
+    }
+  }
+  return result;
 }

@@ -15,42 +15,31 @@
 
 
 
-uint8_t tp_irq = 0;
-uint8_t last_tp_irq = 0;
+// uint8_t tp_irq = 0;
 
-void gpio_irq(uint gpio, uint32_t events) {
-  if ((gpio == TP_IRQ_PIN) ) {
-    uint8_t new_tp_irq = events & GPIO_IRQ_EDGE_RISE ? GPIO_IRQ_EDGE_RISE : GPIO_IRQ_EDGE_FALL;
-    if (new_tp_irq != last_tp_irq) {
-      tp_irq = new_tp_irq;
-    }
-  }
-}
+// void gpio_irq(uint gpio, uint32_t events) {
+//   if ((gpio == TP_IRQ_PIN) ) {
+//     tp_irq = events & GPIO_IRQ_EDGE_RISE ? GPIO_IRQ_EDGE_RISE : GPIO_IRQ_EDGE_FALL;
+//   }
+// }
 
-static void gpio_pullup(uint8_t pin) {
-    gpio_set_dir(pin, GPIO_IN);
-    gpio_pull_up(pin); 
-}
+// static void gpio_pullup(uint8_t pin) {
+//     gpio_set_dir(pin, GPIO_IN);
+//     gpio_pull_up(pin); 
+// }
 
-void init_irq(void) {
-  gpio_pullup(TP_IRQ_PIN);
-  gpio_set_irq_enabled_with_callback(TP_IRQ_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &gpio_irq);
-}
+// void init_irq(void) {
+//   gpio_pullup(TP_IRQ_PIN);
+//   gpio_set_irq_enabled_with_callback(TP_IRQ_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &gpio_irq);
+// }
 
 
 bool looping = true;
 
-
+bool tp_hb = false;
 
 static bool heartbeat(struct repeating_timer *t) {
-  if (tp_irq) {
-    last_tp_irq = tp_irq;
-    printf("%sing\r\n", tp_irq == GPIO_IRQ_EDGE_RISE ? "ris" : "fall");
-    if (tp_irq == GPIO_IRQ_EDGE_RISE) {
-      printf("\r\n");
-    }
-    tp_irq = 0;
-  }
+  tp_hb = true;
 }
 
 
@@ -95,18 +84,40 @@ void setup() {
 
   TP_Init();
 
-  init_irq(); 
+  // init_irq(); 
   // TP_calibrate();
 
-  printf("Starting...\r\n");
+  // printf("Starting...\r\n");
+  // DisplayOff();
+  // regionButtons();
+  alphaKeyboard();
 }
 
 
 
 
-
+// uint16_t highlight = 300;
 
 void loop() {
+  if (tp_hb) {
+    tp_hb = false;
+    TP_Update();
+  }
+  if (clear_grid > -1) {
+    int16_t button = buttonIndex(clear_grid, alpha, 38);
+    if (button > -1) {
+      highlightButton(button, alpha, false);
+    }
+    clear_grid = -1;
+  }
+  if (highlight_grid > -1) {
+    int16_t button = buttonIndex(highlight_grid, alpha, 38);
+    if (button > -1) {
+      highlightButton(button, alpha, true);
+    }
+    highlight_grid = -1;
+  }
+
   // testBTree();
   // fontDemo();
   // buttonDemo();
@@ -120,7 +131,7 @@ void loop() {
   // DrawCross(WHITE, 20,220,10);
   // DrawCross(WHITE, 300,220,10);
   // looping = false;
-  DisplayOff();
+  // DisplayOff();
   // TP_XY point;
   // if (tp_irq == IRQ_FALL) {
   //   if (TP_Scan(&point)) {
