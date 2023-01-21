@@ -13,6 +13,7 @@
 #include "buttonDemo.h"
 #include "lcd_touch.h"
 #include "liberationmono.h"
+#include "ff.h"
 
 
 
@@ -68,6 +69,9 @@ static void TP_calibrate(void) {
   calibrate(raw);
 }
 
+char input[11] = "";
+
+
 void setup() {
   static struct repeating_timer timer;
 
@@ -75,8 +79,8 @@ void setup() {
   add_repeating_timer_ms(125, heartbeat, NULL, &timer);
   System_Init();
 
-  // const char * DirName = "/";
-  // f_mount(&microSDFatFs, DirName, 1);
+  const char * DirName = "/";
+  f_mount(&microSDFatFs, DirName, 1);
 
   InitPWM();
   
@@ -115,21 +119,39 @@ void loop() {
     highlight_grid = -1;
   }
 
+
   if (press_grid > -1) {
-    int16_t button_index = buttonIndex(press_grid, alpha, 38);
-    if (button_index > -1) {
-      sprintf(disp_buf, "%3d press", button_index);
-      DrawString(0, 0, disp_buf, &Liberation18, BRED, BACKGROUND);
+    int8_t button_index = buttonIndex(press_grid, alpha, 38);
+    if (button_index < 36) {
+      uint16_t l = strlen(input);
+      input[l] = alpha[button_index].l0[0];
+      input[l+1] = 0;
+    } else if (button_index == 36) {
+      fcc_rec fcc;
+      ClearWindow(BACKGROUND, 0, 0, 320, 4 * Liberation10.height);
+      ClearWindow(BACKGROUND, 0, 80, 256, Liberation18.height);
+      if (findCall(&fcc, input)) {
+        DrawString(0, 0, fcc.callsign, &Liberation10, BCYAN, BACKGROUND);
+        DrawString(0, Liberation10.height, fcc.entity_name, &Liberation10, BCYAN, BACKGROUND);
+      } else {
+        DrawString(0, 0, "NOT FOUND", &Liberation10, BRED, BACKGROUND);
+      }
+      input[0] = 0;
+    } else if (button_index == 37) {
+      uint16_t l = strlen(input);
+      if (l) {
+        input[l-1] = 0;
+        DrawString(Liberation18.width * (l-1) , 80, " ", &Liberation18, BCYAN, BACKGROUND);
+      }
     }
+    // sprintf(disp_buf, "%s", input);
+    DrawString(0, 80, input, &Liberation18, BCYAN, BACKGROUND);
     press_grid = -1;
   }
 
   if (hold_grid > -1) {
-    int16_t button_index = buttonIndex(hold_grid, alpha, 38);
-    if (button_index > -1) {
-      sprintf(disp_buf, "%3d hold ", button_index);
-      DrawString(0, 0, disp_buf, &Liberation18, BCYAN, BACKGROUND);
-    }
+    // sprintf(disp_buf, "%3d hold ", buttonIndex(hold_grid, alpha, 38));
+    // DrawString(0, 0, disp_buf, &Liberation18, BCYAN, BACKGROUND);
     hold_grid = -1;
   }
 

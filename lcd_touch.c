@@ -251,7 +251,7 @@ void TP_Update(void) {
         press_grid = current_grid;
       }
     }
-    current_grid = 0;
+    current_grid = -1;
     press_counter = 0;
   }
 }
