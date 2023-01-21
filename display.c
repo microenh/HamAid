@@ -157,3 +157,4 @@ void displayShowBottom(const bool show) {
         topLayout.y = showBottom ? yTop : yMiddle;
     }
 }
+

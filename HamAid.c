@@ -12,6 +12,7 @@
 #include "fontDemo.h"
 #include "buttonDemo.h"
 #include "lcd_touch.h"
+#include "liberationmono.h"
 
 
 
@@ -93,12 +94,8 @@ void setup() {
   alphaKeyboard();
 }
 
-
-
-
-// uint16_t highlight = 300;
-
 void loop() {
+  char disp_buf[20];
   if (tp_hb) {
     tp_hb = false;
     TP_Update();
@@ -116,6 +113,24 @@ void loop() {
       highlightButton(button, alpha, true);
     }
     highlight_grid = -1;
+  }
+
+  if (press_grid > -1) {
+    int16_t button_index = buttonIndex(press_grid, alpha, 38);
+    if (button_index > -1) {
+      sprintf(disp_buf, "%3d press", button_index);
+      DrawString(0, 0, disp_buf, &Liberation18, BRED, BACKGROUND);
+    }
+    press_grid = -1;
+  }
+
+  if (hold_grid > -1) {
+    int16_t button_index = buttonIndex(hold_grid, alpha, 38);
+    if (button_index > -1) {
+      sprintf(disp_buf, "%3d hold ", button_index);
+      DrawString(0, 0, disp_buf, &Liberation18, BCYAN, BACKGROUND);
+    }
+    hold_grid = -1;
   }
 
   // testBTree();

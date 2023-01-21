@@ -213,21 +213,45 @@ void TP_Init(void)
 }
 
 uint16_t current_grid = -1;
+uint8_t press_counter = 0;
+bool flashed = false;
+
+const uint8_t HOLD_CT = 8;
+const uint8_t PRESS_CT = 1;
 
 void TP_Update(void) {
+  if (flashed) {
+    Invert(false);
+    flashed = false;
+  }
   int16_t down_grid = TP_Scan();
   if (down_grid > -1) {
-    if (down_grid != current_grid) {
+    if (down_grid == current_grid) {
+      if (press_counter < 255) {
+        press_counter++;
+        if (press_counter == HOLD_CT ) {
+          Invert(true);
+          flashed = true;
+        }
+      }
+    } else {
       if (current_grid > -1) {
         clear_grid = current_grid;
       }
       highlight_grid = down_grid;
       current_grid = down_grid;
+      press_counter = 0;
     }
   } else {
     if (current_grid > -1) {
       clear_grid = current_grid;
-      current_grid = 0;
+      if (press_counter >= HOLD_CT) {
+        hold_grid = current_grid;
+      } else /* if (press_counter >= PRESS_CT) */ {
+        press_grid = current_grid;
+      }
     }
+    current_grid = 0;
+    press_counter = 0;
   }
 }
