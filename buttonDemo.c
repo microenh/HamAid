@@ -8,16 +8,16 @@
 
 
 BUTTON_LAYOUT alpha[] = {
-  {0,7,2,2,"0",NULL,WHITE,CYAN,BCYAN,false},
-  {2,7,2,2,"1",NULL,WHITE,CYAN,BCYAN,false},
-  {4,7,2,2,"2",NULL,WHITE,CYAN,BCYAN,false},
-  {6,7,2,2,"3",NULL,WHITE,CYAN,BCYAN,false},
-  {8,7,2,2,"4",NULL,WHITE,CYAN,BCYAN,false},
-  {10,7,2,2,"5",NULL,WHITE,CYAN,BCYAN,false},
-  {12,7,2,2,"6",NULL,WHITE,CYAN,BCYAN,false},
-  {14,7,2,2,"7",NULL,WHITE,CYAN,BCYAN,false},
-  {16,7,2,2,"8",NULL,WHITE,CYAN,BCYAN,false},
-  {18,7,2,2,"9",NULL,WHITE,CYAN,BCYAN,false},
+  {0,7,2,2,"1",NULL,WHITE,CYAN,BCYAN,false},
+  {2,7,2,2,"2",NULL,WHITE,CYAN,BCYAN,false},
+  {4,7,2,2,"3",NULL,WHITE,CYAN,BCYAN,false},
+  {6,7,2,2,"4",NULL,WHITE,CYAN,BCYAN,false},
+  {8,7,2,2,"5",NULL,WHITE,CYAN,BCYAN,false},
+  {10,7,2,2,"6",NULL,WHITE,CYAN,BCYAN,false},
+  {12,7,2,2,"7",NULL,WHITE,CYAN,BCYAN,false},
+  {14,7,2,2,"8",NULL,WHITE,CYAN,BCYAN,false},
+  {16,7,2,2,"9",NULL,WHITE,CYAN,BCYAN,false},
+  {18,7,2,2,"0",NULL,WHITE,CYAN,BCYAN,false},
 
   {0,9,2,2,"Q",NULL,WHITE,CYAN,BCYAN,false},
   {2,9,2,2,"W",NULL,WHITE,CYAN,BCYAN,false},
@@ -48,7 +48,7 @@ BUTTON_LAYOUT alpha[] = {
   {12,13,2,2,"N",NULL,WHITE,CYAN,BCYAN,false},
   {14,13,2,2,"M",NULL,WHITE,CYAN,BCYAN,false},
 
-  {16,5,4,2,"ENTER",NULL,CYAN,WHITE,BCYAN,true},
+  {16,5,4,2,"FIND",NULL,CYAN,WHITE,BCYAN,true},
   {16,13,4,2,"BACK","SPACE",CYAN,WHITE,BCYAN,false}
 
 };

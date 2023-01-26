@@ -38,7 +38,6 @@ add_subdirectory(lib/sqlite)
 # Add executable. Default name is the project name, version 0.1
 add_executable(HamAid
   HamAid.c
-  btreeTest.c
   button.c
   buttonDemo.c
   config.c

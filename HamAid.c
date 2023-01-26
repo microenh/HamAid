@@ -3,7 +3,6 @@
 #include "pico/stdlib.h"
 #include "hardware/spi.h"
 #include "button.h"
-#include "btreeTest.h"
 
 #include "config.h"
 #include "DEV_Config.h"
@@ -16,24 +15,6 @@
 #include "ff.h"
 #include "lib/sqlite/cAPI.h"
 
-// uint8_t tp_irq = 0;
-
-// void gpio_irq(uint gpio, uint32_t events) {
-//   if ((gpio == TP_IRQ_PIN) ) {
-//     tp_irq = events & GPIO_IRQ_EDGE_RISE ? GPIO_IRQ_EDGE_RISE : GPIO_IRQ_EDGE_FALL;
-//   }
-// }
-
-// static void gpio_pullup(uint8_t pin) {
-//     gpio_set_dir(pin, GPIO_IN);
-//     gpio_pull_up(pin); 
-// }
-
-// void init_irq(void) {
-//   gpio_pullup(TP_IRQ_PIN);
-//   gpio_set_irq_enabled_with_callback(TP_IRQ_PIN, GPIO_IRQ_EDGE_RISE | GPIO_IRQ_EDGE_FALL, true, &gpio_irq);
-// }
-
 
 bool looping = true;
 
@@ -43,6 +24,7 @@ static bool heartbeat(struct repeating_timer *t) {
   tp_hb = true;
 }
 
+FATFS microSDFatFs;
 
 static void TP_calibrate(void) {
   TP_XY raw[4];
@@ -90,8 +72,7 @@ void setup() {
 
   TP_Init();
 
-  // init_irq(); 
-  // TP_calibrate();
+  TP_calibrate();
 
   // printf("Starting...\r\n");
   // DisplayOff();
@@ -138,16 +119,6 @@ void loop() {
       } else {
         DrawString(0, 0, "NOT FOUND", &Liberation10, BRED, BACKGROUND);  
       }
-      // fcc_rec fcc;
-      // ClearWindow(BACKGROUND, 0, 0, 320, 4 * Liberation10.height);
-      // ClearWindow(BACKGROUND, 0, 80, 256, Liberation18.height);
-      // if (findCall(&fcc, input)) {
-      //   DrawString(0, 0, fcc.callsign, &Liberation10, BCYAN, BACKGROUND);
-      //   DrawString(0, Liberation10.height, fcc.entity_name, &Liberation10, BCYAN, BACKGROUND);
-      // } else {
-      //   DrawString(0, 0, "NOT FOUND", &Liberation10, BRED, BACKGROUND);
-      // }
-
       input[0] = 0;
     } else if (button_index == 37) {
       uint16_t l = strlen(input);
@@ -166,28 +137,6 @@ void loop() {
     // DrawString(0, 0, disp_buf, &Liberation18, BCYAN, BACKGROUND);
     hold_grid = -1;
   }
-
-  // testBTree();
-  // fontDemo();
-  // buttonDemo();
-  // alphaKeyboard();
-  // TP_DrawBoard();
-  // sleep_ms(125);
-  // Clear(BLACK);
-  // DisplayOn(25);
-  // DrawCross(WHITE, 20,20,10);
-  // DrawCross(WHITE, 300,20,10);
-  // DrawCross(WHITE, 20,220,10);
-  // DrawCross(WHITE, 300,220,10);
-  // looping = false;
-  // DisplayOff();
-  // TP_XY point;
-  // if (tp_irq == IRQ_FALL) {
-  //   if (TP_Scan(&point)) {
-  //     tp_irq = false;
-  //     // printf("(%d,%d)\r\n", point.x, point.y);
-  //   }
-  // }
 }
 
 int main(void)
