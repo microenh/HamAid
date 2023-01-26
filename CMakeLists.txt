@@ -38,6 +38,7 @@ add_subdirectory(lib/config)
 add_executable(HamAid
   HamAid.c
   btreeTest.c
+  sqliteReader.cpp
   button.c
   buttonDemo.c
   config.c

@@ -14,6 +14,7 @@
 #include "lcd_touch.h"
 #include "liberationmono.h"
 #include "ff.h"
+#include "sqliteReader.h"
 
 
 
@@ -81,7 +82,7 @@ void setup() {
 
   const char * DirName = "/";
   f_mount(&microSDFatFs, DirName, 1);
-
+  
   InitPWM();
   
   /* LCD Init */
