@@ -14,9 +14,7 @@
 #include "lcd_touch.h"
 #include "liberationmono.h"
 #include "ff.h"
-#include "sqliteReader.h"
-
-
+#include "lib/sqlite/cAPI.h"
 
 // uint8_t tp_irq = 0;
 
@@ -71,6 +69,7 @@ static void TP_calibrate(void) {
 }
 
 char input[11] = "";
+sqliteReader *r;
 
 
 void setup() {
@@ -82,6 +81,7 @@ void setup() {
 
   const char * DirName = "/";
   f_mount(&microSDFatFs, DirName, 1);
+  r = sql_open("fcc.db");
   
   InitPWM();
   
@@ -100,6 +100,7 @@ void setup() {
 }
 
 void loop() {
+  LOOKUP *lu;
   char disp_buf[20];
   if (tp_hb) {
     tp_hb = false;
@@ -128,15 +129,25 @@ void loop() {
       input[l] = alpha[button_index].l0[0];
       input[l+1] = 0;
     } else if (button_index == 36) {
-      fcc_rec fcc;
       ClearWindow(BACKGROUND, 0, 0, 320, 4 * Liberation10.height);
       ClearWindow(BACKGROUND, 0, 80, 256, Liberation18.height);
-      if (findCall(&fcc, input)) {
-        DrawString(0, 0, fcc.callsign, &Liberation10, BCYAN, BACKGROUND);
-        DrawString(0, Liberation10.height, fcc.entity_name, &Liberation10, BCYAN, BACKGROUND);
+      lu = sql_find_call(r, input);
+      if (lu) {
+        DrawString(0, 0, lu->callsign, &Liberation10, BCYAN, BACKGROUND);
+        DrawString(0, Liberation10.height, lu->entity_name, &Liberation10, BCYAN, BACKGROUND);
       } else {
-        DrawString(0, 0, "NOT FOUND", &Liberation10, BRED, BACKGROUND);
+        DrawString(0, 0, "NOT FOUND", &Liberation10, BRED, BACKGROUND);  
       }
+      // fcc_rec fcc;
+      // ClearWindow(BACKGROUND, 0, 0, 320, 4 * Liberation10.height);
+      // ClearWindow(BACKGROUND, 0, 80, 256, Liberation18.height);
+      // if (findCall(&fcc, input)) {
+      //   DrawString(0, 0, fcc.callsign, &Liberation10, BCYAN, BACKGROUND);
+      //   DrawString(0, Liberation10.height, fcc.entity_name, &Liberation10, BCYAN, BACKGROUND);
+      // } else {
+      //   DrawString(0, 0, "NOT FOUND", &Liberation10, BRED, BACKGROUND);
+      // }
+
       input[0] = 0;
     } else if (button_index == 37) {
       uint16_t l = strlen(input);

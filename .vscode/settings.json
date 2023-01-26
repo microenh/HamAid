@@ -19,6 +19,5 @@
   "cortex-debug.openocdPath.windows": "openocd.exe",
   "cortex-debug.openocdPath.osx": "${env:PICO_SDK_PATH}/../openocd/src/openocd",
   "files.associations": {
-    "ff.h": "c"
   },
 }

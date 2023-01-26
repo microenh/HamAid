@@ -1,8 +1,6 @@
-#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "ff.h"
 
 #include "sqliteReader.h"
 

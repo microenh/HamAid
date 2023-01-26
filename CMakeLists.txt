@@ -33,12 +33,12 @@ add_subdirectory(lib/fonts/liberationmono)
 add_subdirectory(lib/fatfs)
 add_subdirectory(lib/sdcard)
 add_subdirectory(lib/config)
+add_subdirectory(lib/sqlite)
 
 # Add executable. Default name is the project name, version 0.1
 add_executable(HamAid
   HamAid.c
   btreeTest.c
-  sqliteReader.cpp
   button.c
   buttonDemo.c
   config.c
@@ -60,6 +60,7 @@ target_link_libraries(
         liberationmono
         fatfs
         config
+        sqlite
         sdcard)
 
 # Add the standard include files to the build
